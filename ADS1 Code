@@ -1,0 +1,28 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def read_csv(csv_file_name):
+    """
+    
+
+    Parameters
+    ----------
+    csv_file_name : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    None.
+
+    """
+    countries = ["Brazil","India","Nigeria", "Russian Federation", "China"]
+    col_filter = ["1990","1991","1992","1993","1994","1995"]
+    
+    year_data = pd.read_csv(csv_file_name, skiprows=3, iterator=False)
+
+    year_data.index = year_data["Country Name"]
+    year_data = year_data.loc[countries,col_filter]
+    year_data.columns= year_data.columns.astype(int)
+    year_data.dropna(axis=1)
+    country_data = year_data.T
+    return country_data,year_data

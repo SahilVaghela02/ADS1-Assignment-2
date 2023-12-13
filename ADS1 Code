@@ -1,34 +1,58 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Dec 11 12:09:44 2023
+
+@author: HP
+"""
+
 import pandas as pd
 import matplotlib.pyplot as plt
 
+
 def read_csv(csv_file_name):
     """
-    
+    Read and filter data from a CSV file.
 
     Parameters
     ----------
-    csv_file_name : TYPE
-        DESCRIPTION.
+    csv_file_name : str
+        The name of the CSV file to read.
 
     Returns
     -------
-    None.
-
+    pd.DataFrame
+        Transposed DataFrame with filtered data.
+    pd.DataFrame
+        Original DataFrame with filtered data.
     """
-    countries = ["Brazil","India","Nigeria", "Russian Federation", "China"]
-    col_filter = ["1990","1991","1992","1993","1994","1995"]
-    
-    year_data = pd.read_csv(csv_file_name, skiprows=3, iterator=False)
+    # Defining countries and years for filtering
+    countries = ["Brazil", "India", "Nigeria",
+                 "Russian Federation", "China", "United States", "Finland"]
+    col_filter = ["1990", "1991", "1992", "1993", "1994", "1995"]
 
+    # Reading CSV file and preprocess data
+    year_data = pd.read_csv(csv_file_name, skiprows=3, iterator=False)
     year_data.index = year_data["Country Name"]
-    year_data = year_data.loc[countries,col_filter]
-    year_data.columns= year_data.columns.astype(int)
+    year_data = year_data.loc[countries, col_filter]
+    year_data.columns = year_data.columns.astype(int)
     year_data.dropna(axis=1)
     country_data = year_data.T
-    return country_data,year_data
+    return country_data, year_data
 
-def show_stat(df_stat,title):
-    print("======",title)
+
+def show_stat(df_stat, title):
+    """
+    Display statistical information for a DataFrame.
+
+    Parameters
+    ----------
+    df_stat : pd.DataFrame
+        DataFrame for statistical analysis.
+    title : str
+        Title for the statistical analysis.
+    """
+
+    print("======", title)
     print("--describe")
     print(df_stat.describe())
     print("--median")
@@ -37,19 +61,149 @@ def show_stat(df_stat,title):
     print(df_stat.skew())
     print("--kurtosis")
     print(df_stat.kurtosis())
-        
-def plot_corr(country,df_fst_lnd,df_co2,df_popultion,energy_constion):
+
+
+def plot_corr(country, df_fst_lnd, df_co2, df_popultion, df_energyconsumption, 
+              df_urbanpopltion):
+    """
+    Plot a correlation matrix heatmap for environmental and demographic indicators.
+
+    Parameters
+    ----------
+    country : str
+        The country for which the correlation matrix is generated.
+    df_fst_lnd : pd.DataFrame
+        DataFrame for forest land data.
+    df_co2 : pd.DataFrame
+        DataFrame for CO2 emissions data.
+    df_popultion : pd.DataFrame
+        DataFrame for population growth data.
+    df_energyconsumption : pd.DataFrame
+        DataFrame for energy consumption data.
+    """
+    # Check if the lengths match
+    lengths = {
+        "forest land": len(df_fst_lnd[country]),
+        "co2": len(df_co2[country]),
+        "population": len(df_popultion[country]),
+        "consumption": len(df_energyconsumption[country]),
+        "urban population": len(df_urbanpopltion[country]),
+    }
+
+    if len(set(lengths.values())) > 1:
+        raise ValueError(
+            f"Lengths of dataframes do not match! Lengths: {lengths}")
+
+    # Create DataFrame
     df_corr = pd.DataFrame()
     df_corr["forest land"] = df_fst_lnd[country].values
     df_corr["co2"] = df_co2[country].values
     df_corr["population"] = df_popultion[country].values
-    df_corr["consumption"] = energy_constion[country].values
+    df_corr["consumption"] = df_energyconsumption[country].values
+    df_corr["urban population"] = df_urbanpopltion[country].values
+
+    # Plot correlation matrix heatmap with a specific colormap (e.g., 'viridis')
     corr_mat = df_corr.corr()
     plt.figure()
-    plt.matshow(corr_mat)
-    plt.xticks(range(len(corr_mat)),corr_mat.columns, rotation=90)
-    plt.yticks(range(len(corr_mat)),corr_mat.columns)
-    
-    plt.colorbar()
+
+    # To Plot heatmap
+    im = plt.matshow(corr_mat, cmap='viridis')
+
+    # Annotate cells with their values
+    for i in range(corr_mat.shape[0]):
+        for j in range(corr_mat.shape[1]):
+            plt.text(j, i, f'{corr_mat.iloc[i, j]:.2f}',
+                     ha='center', va='center', color='white')
+
+    plt.xticks(range(len(corr_mat)), corr_mat.columns, rotation=90)
+    plt.yticks(range(len(corr_mat)), corr_mat.columns)
+    plt.colorbar(im)
     plt.title(country)
-    plt.savefig(country+".png", dpi=300)
+    plt.savefig(country + ".png", dpi=300)
+
+    # To plot Line Chart
+
+
+def plot_line_chart(title, xlbl, ylbl, df):
+    """
+    Plot a line chart for a DataFrame.
+
+    Parameters
+    ----------
+    title : str
+        Title for the line chart.
+    xlbl : str
+        Label for the x-axis.
+    ylbl : str
+        Label for the y-axis.
+    df : pd.DataFrame
+        DataFrame for the line chart.
+    """
+    plt.figure(figsize=(10, 6))
+    ap = df.plot(title=title)
+
+    # Move legend outside the chart
+    ap.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+
+    ap.set_ylabel(ylbl)
+    ap.set_xlabel(xlbl)
+    fig = ap.get_figure()
+    fig.savefig(title + ".png", bbox_inches='tight')
+
+    # To plot Bar Chart
+
+
+def plot_bar_chart(title, xlbl, ylbl, df):
+    """
+    Plot a bar chart for a DataFrame.
+
+    Parameters
+    ----------
+    title : str
+        Title for the bar chart.
+    xlbl : str
+        Label for the x-axis.
+    ylbl : str
+        Label for the y-axis.
+    df : pd.DataFrame
+        DataFrame for the bar chart.
+    """
+    plt.figure(figsize=(10, 6))
+    ap = df.plot.bar(title=title)
+    ap.set_ylabel(ylbl)
+    ap.set_xlabel(xlbl)
+    fig = ap.get_figure()
+    fig.savefig(title+".png")
+
+
+# Data Loading and Visualization
+country_forst_land, year_forest_land = read_csv(
+    "API_AG.LND.FRST.K2_DS2_en_csv_v2_5995336.csv")
+country_co2, year_co2 = read_csv(
+    "API_EN.ATM.CO2E.KT_DS2_en_csv_v2_5994970.csv")
+country_population, year_population = read_csv(
+    "API_SP.POP.GROW_DS2_en_csv_v2_6225188.csv")
+country_energy_consumption, yearly_consumption = read_csv(
+    "API_EG.USE.ELEC.KH.PC_DS2_en_csv_v2_6229098.csv")
+urban_population, yearly_population = read_csv(
+    "API_SP.URB.TOTL_DS2_en_csv_v2_6227010.csv")
+
+# Display statistical information for forest land
+show_stat(country_forst_land, "forest land")
+
+# To Plot line and bar charts for forest land and CO2 emissions
+plot_line_chart("Forest Land", "years", "forest land", country_forst_land)
+plot_bar_chart("Forest Land", "countries", "forest land", year_forest_land)
+
+plot_line_chart("co2 title", "years", "co2", country_co2)
+plot_bar_chart("co2 title", "countries", "co2", year_co2)
+
+# To Plot correlation matrix heatmap for United States, Russian Federation and Nigeria
+plot_corr("United States", country_forst_land, country_co2,
+          country_population, country_energy_consumption, urban_population)
+plot_corr("Russian Federation", country_forst_land, country_co2,
+          country_population, country_energy_consumption, urban_population)
+plot_corr("Nigeria", country_forst_land, country_co2,
+          country_population, country_energy_consumption, urban_population)
+
+plt.show()

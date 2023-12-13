@@ -26,3 +26,30 @@ def read_csv(csv_file_name):
     year_data.dropna(axis=1)
     country_data = year_data.T
     return country_data,year_data
+
+def show_stat(df_stat,title):
+    print("======",title)
+    print("--describe")
+    print(df_stat.describe())
+    print("--median")
+    print(df_stat.median())
+    print("--skew")
+    print(df_stat.skew())
+    print("--kurtosis")
+    print(df_stat.kurtosis())
+        
+def plot_corr(country,df_fst_lnd,df_co2,df_popultion,energy_constion):
+    df_corr = pd.DataFrame()
+    df_corr["forest land"] = df_fst_lnd[country].values
+    df_corr["co2"] = df_co2[country].values
+    df_corr["population"] = df_popultion[country].values
+    df_corr["consumption"] = energy_constion[country].values
+    corr_mat = df_corr.corr()
+    plt.figure()
+    plt.matshow(corr_mat)
+    plt.xticks(range(len(corr_mat)),corr_mat.columns, rotation=90)
+    plt.yticks(range(len(corr_mat)),corr_mat.columns)
+    
+    plt.colorbar()
+    plt.title(country)
+    plt.savefig(country+".png", dpi=300)
